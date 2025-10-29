@@ -10,13 +10,13 @@ import (
 )
 
 type Slider struct {
-	ID          int       `json:"id"`
-	ImageLink   string    `json:"image_link"`
-	ForwardLink string    `json:"forward_link"`
-	Title       string    `json:"title"`
-	Order       int       `json:"order"`
-	IsActive    bool      `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int       `json:"slider_id"`
+	ImageLink   string    `json:"banner_image_url"`
+	ForwardLink string    `json:"redirect_url"`
+	Title       string    `json:"banner_title"`
+	Order       int       `json:"display_order"`
+	IsActive    bool      `json:"is_visible"`
+	CreatedAt   time.Time `json:"created_date"`
 }
 
 var db *sql.DB

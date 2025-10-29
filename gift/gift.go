@@ -11,15 +11,15 @@ import (
 )
 
 type Gift struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	ImageLink   string    `json:"image_link"`
-	Type        string    `json:"type"`
-	Description string    `json:"description"`
-	Points      int       `json:"points"`
-	Stock       int       `json:"stock"`
-	IsActive    bool      `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int       `json:"gift_id"`
+	Name        string    `json:"gift_name"`
+	ImageLink   string    `json:"image_url"`
+	Type        string    `json:"reward_type"`
+	Description string    `json:"gift_description"`
+	Points      int       `json:"required_points"`
+	Stock       int       `json:"available_stock"`
+	IsActive    bool      `json:"is_available"`
+	CreatedAt   time.Time `json:"created_date"`
 }
 
 var db *sql.DB

@@ -11,24 +11,24 @@ import (
 var db *sql.DB
 
 type PaperType struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
+	ID           int       `json:"type_id"`
+	Name         string    `json:"type_name"`
 	DisplayOrder int       `json:"display_order"`
 	IsActive     bool      `json:"is_active"`
 	ImageCount   int       `json:"image_count"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	CreatedAt    time.Time `json:"created_date"`
+	UpdatedAt    time.Time `json:"modified_date"`
 }
 
 type PaperImage struct {
-	ID           int       `json:"id"`
+	ID           int       `json:"image_id"`
 	TypeID       int       `json:"type_id"`
 	TypeName     string    `json:"type_name,omitempty"`
 	ImageURL     string    `json:"image_url"`
 	DisplayOrder int       `json:"display_order"`
 	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	CreatedAt    time.Time `json:"created_date"`
+	UpdatedAt    time.Time `json:"modified_date"`
 }
 
 type PaperTypeWithImages struct {

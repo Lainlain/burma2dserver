@@ -11,11 +11,11 @@ import (
 )
 
 type ThreeDResult struct {
-	ID        int       `json:"id"`
-	Date      string    `json:"date"`
-	Result    string    `json:"result"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int       `json:"result_id"`
+	Date      string    `json:"draw_date"`
+	Result    string    `json:"winning_number"`
+	CreatedAt time.Time `json:"created_date"`
+	UpdatedAt time.Time `json:"modified_date"`
 }
 
 var db *sql.DB

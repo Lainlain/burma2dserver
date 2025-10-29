@@ -12,19 +12,19 @@ import (
 
 // TwoDHistory represents a single lottery history record
 type TwoDHistory struct {
-	ID          int       `json:"id,omitempty" db:"id"`
-	Date        string    `json:"date" db:"date"`
-	Set1200     string    `json:"1200set" db:"set1200"`
-	Value1200   string    `json:"1200value" db:"value1200"`
-	Result1200  string    `json:"1200" db:"result1200"`
-	Set430      string    `json:"430set" db:"set430"`
-	Value430    string    `json:"430value" db:"value430"`
-	Result430   string    `json:"430" db:"result430"`
-	Modern930   string    `json:"930modern" db:"modern930"`
-	Internet930 string    `json:"930internet" db:"internet930"`
-	Modern200   string    `json:"200modern" db:"modern200"`
-	Internet200 string    `json:"200internet" db:"internet200"`
-	CreatedAt   time.Time `json:"created_at,omitempty" db:"created_at"`
+	ID          int       `json:"history_id,omitempty" db:"id"`
+	Date        string    `json:"draw_date" db:"date"`
+	Set1200     string    `json:"noon_set" db:"set1200"`
+	Value1200   string    `json:"noon_value" db:"value1200"`
+	Result1200  string    `json:"noon_result" db:"result1200"`
+	Set430      string    `json:"evening_set" db:"set430"`
+	Value430    string    `json:"evening_value" db:"value430"`
+	Result430   string    `json:"evening_result" db:"result430"`
+	Modern930   string    `json:"morning_modern" db:"modern930"`
+	Internet930 string    `json:"morning_internet" db:"internet930"`
+	Modern200   string    `json:"afternoon_modern" db:"modern200"`
+	Internet200 string    `json:"afternoon_internet" db:"internet200"`
+	CreatedAt   time.Time `json:"created_date,omitempty" db:"created_at"`
 }
 
 var db *sql.DB

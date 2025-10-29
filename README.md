@@ -62,23 +62,45 @@ Response: Returns current lottery data in JSON format
 POST /api/burma2d/update
 Content-Type: application/json
 
-Body:
+Body (Input format from API runner):
 {
+  "date": "2025/10/16",
   "live": "22",
   "status": "On",
-  "set1200": "15",
-  "value1200": "89",
-  "result1200": "589",
-  "set430": "67",
-  "value430": "34",
-  "result430": "134",
-  "modern930": "845",
-  "internet930": "921",
-  "modern200": "376",
-  "internet200": "542",
+  "1200set": "15",
+  "1200value": "89",
+  "1200": "589",
+  "430set": "67",
+  "430value": "34",
+  "430": "134",
+  "930modern": "845",
+  "930internet": "921",
+  "200modern": "376",
+  "200internet": "542",
   "updatetime": "12:01:45 16/10/2025"
 }
+
+Response (Output format with Burma2D branded keys):
+{
+  "draw_date": "2025/10/16",
+  "live_number": "22",
+  "service_status": "On",
+  "noon_set": "15",
+  "noon_value": "89",
+  "noon_result": "589",
+  "evening_set": "67",
+  "evening_value": "34",
+  "evening_result": "134",
+  "morning_modern": "845",
+  "morning_internet": "921",
+  "afternoon_modern": "376",
+  "afternoon_internet": "542",
+  "last_update": "12:01:45 16/10/2025",
+  "active_viewers": 0
+}
 ```
+
+**Note**: Server automatically transforms input keys to Burma2D branded output keys.
 
 ### 4. Real-Time SSE Stream 📡
 ```bash
@@ -86,8 +108,10 @@ GET /api/burma2d/stream
 Content-Type: text/event-stream
 
 # Streams real-time lottery updates to all connected clients
-# Each update is sent as an SSE event
+# Each update is sent as an SSE event with Burma2D branded keys
 ```
+
+📋 **See [../JSON-KEY-CHANGES.md](../JSON-KEY-CHANGES.md) for complete key mapping**
 
 ---
 
