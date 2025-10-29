@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #1e3c72;
+            font-size: 28px;
+        }
+        .content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e3c72;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="url"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            background: #1e3c72;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #2a5298;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Create New Slider</h1>
+        </header>
+
+        <div class="content">
+            <div id="alert" style="display: none;"></div>
+            
+            <form id="sliderForm">
+                <div class="form-group">
+                    <label for="title">Slider Title *</label>
+                    <input type="text" id="title" name="title" required placeholder="Enter slider title">
+                </div>
+
+                <div class="form-group">
+                    <label for="image_file">Slider Image *</label>
+                    <input type="file" id="image_file" name="image" accept="image/*" required>
+                    <small style="color: #666;">Upload image (JPG, PNG, GIF, WebP). Recommended: 1200x400px. Max 5MB</small>
+                    <div id="imagePreview" class="image-preview" style="display: none; margin-top: 10px; max-width: 400px;">
+                        <img id="previewImg" src="" alt="Preview" style="width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+                    </div>
+                    <input type="hidden" id="image_link" name="image_link">
+                </div>
+
+                <div class="form-group">
+                    <label for="forward_link">Forward Link (Optional)</label>
+                    <input type="url" id="forward_link" name="forward_link" placeholder="https://example.com/destination">
+                    <small style="color: #666;">URL to navigate to when slider is clicked</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="order">Display Order *</label>
+                    <input type="number" id="order" name="order" required min="0" value="0">
+                    <small style="color: #666;">Lower numbers appear first (0, 1, 2, ...)</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_active" name="is_active" checked>
+                        <label for="is_active" style="margin: 0;">Active (visible in carousel)</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Create Slider</button>
+                    <a href="/admin/sliders" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Image preview
+        document.getElementById('image_file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('sliderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // First, upload the image
+            const imageFile = document.getElementById('image_file').files[0];
+            if (!imageFile) {
+                showAlert('Please select an image', 'error');
+                return;
+            }
+
+            showAlert('Uploading image...', 'info');
+
+            try {
+                // Upload image first
+                const formData = new FormData();
+                formData.append('image', imageFile);
+
+                const uploadResponse = await fetch('/api/admin/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    const error = await uploadResponse.json();
+                    throw new Error(error.error || 'Failed to upload image');
+                }
+
+                const uploadResult = await uploadResponse.json();
+                const imageUrl = uploadResult.image_url;
+
+                // Now create the slider
+                const sliderData = {
+                    title: document.getElementById('title').value,
+                    image_link: imageUrl,
+                    forward_link: document.getElementById('forward_link').value,
+                    order_num: parseInt(document.getElementById('order').value),
+                    is_active: document.getElementById('is_active').checked
+                };
+
+                const response = await fetch('/api/admin/sliders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sliderData)
+                });
+
+                if (response.ok) {
+                    showAlert('Slider created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin/sliders';
+                    }, 1500);
+                } else {
+                    const error = await response.text();
+                    showAlert('Failed to create slider: ' + error, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = 'alert alert-' + type;
+            alert.textContent = message;
+            alert.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

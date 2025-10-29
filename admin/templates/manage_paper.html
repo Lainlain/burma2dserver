@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .header .back-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FFD700;
+        }
+        .btn {
+            background: #FFD700;
+            color: #333;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #FFC700;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .types-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .type-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #FFD700;
+        }
+        .type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .type-header h3 {
+            color: #333;
+            margin: 0;
+        }
+        .type-actions button {
+            margin-left: 5px;
+        }
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .image-item {
+            position: relative;
+            aspect-ratio: 3/4;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-images-btn {
+            margin-top: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: #000;
+        }
+        .image-urls-input {
+            margin-bottom: 15px;
+        }
+        .image-urls-input textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status-active {
+            background: #4CAF50;
+            color: white;
+        }
+        .status-inactive {
+            background: #f44336;
+            color: white;
+        }
+        .image-count {
+            color: #666;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #FFD700;
+            background: #fffef0;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .upload-area h3 {
+            color: #333;
+            margin: 10px 0;
+        }
+        .upload-area p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .image-preview-item {
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-preview-remove:hover {
+            background: rgba(200, 0, 0, 1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 Manage Paper</h1>
+            <a href="/admin" class="back-link">← Back to Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Add New Type Section -->
+            <div class="section">
+                <h2>Add New Paper Type</h2>
+                <button class="btn" onclick="showAddTypeModal()">➕ Add New Type</button>
+            </div>
+
+            <!-- Paper Types List -->
+            <div class="section">
+                <h2>Paper Types</h2>
+                <div class="types-list" id="typesList">
+                    <!-- Types will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Type Modal -->
+    <div id="addTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Paper Type</h3>
+                <span class="close-btn" onclick="closeModal('addTypeModal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>Type Name</label>
+                <input type="text" id="typeName" placeholder="e.g., Myanmar News">
+            </div>
+            <div class="form-group">
+                <label>Display Order</label>
+                <input type="number" id="typeDisplayOrder" value="0">
+            </div>
+            <button class="btn" onclick="addType()">Create Type</button>
+        </div>
+    </div>
+
+    <!-- Edit Type Modal -->
+    <div id="editTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Paper Type</h3>
+                <span class="close-btn" onclick="closeModal('editTypeModal')">&times;</span>
+            </div>
+            <input type="hidden" id="editTypeId">
+            <div class="form-group">
+                <label>Type Name</label>
+                <input type="text" id="editTypeName">
+            </div>
+            <div class="form-group">
+                <label>Display Order</label>
+                <input type="number" id="editTypeDisplayOrder">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editTypeStatus">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <button class="btn" onclick="updateType()">Update Type</button>
+        </div>
+    </div>
+
+    <!-- Add Images Modal -->
+    <div id="addImagesModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Upload Images</h3>
+                <span class="close-btn" onclick="closeModal('addImagesModal')">&times;</span>
+            </div>
+            <input type="hidden" id="addImagesTypeId">
+            
+            <!-- File Upload Area -->
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <h3>Click to select images</h3>
+                <p>You can select multiple images at once</p>
+                <p style="font-size: 12px; color: #999;">Supported: JPG, PNG, GIF, WEBP</p>
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            
+            <!-- Upload Progress -->
+            <div id="uploadProgress" style="display: none; margin-top: 20px;">
+                <div style="margin-bottom: 10px;">
+                    <strong>Uploading:</strong> <span id="uploadStatus">0 / 0</span>
+                </div>
+                <div style="background: #e0e0e0; height: 30px; border-radius: 4px; overflow: hidden;">
+                    <div id="progressBar" style="background: #4CAF50; height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        0%
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Area -->
+            <div id="imagePreviewArea" style="margin-top: 20px; display: none;">
+                <h4>Selected Images (<span id="imageCount">0</span>)</h4>
+                <div id="imagePreviews" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px;">
+                    <!-- Previews will be added here -->
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn" id="uploadBtn" onclick="uploadImages()" style="display: none;">
+                    📤 Upload All Images
+                </button>
+                <button class="btn" onclick="closeModal('addImagesModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTypeData = [];
+
+        // Load all types on page load
+        window.onload = function() {
+            loadTypes();
+        };
+
+        function loadTypes() {
+            console.log('Loading paper types...');
+            fetch('/api/admin/paper/types')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error('Failed to load types');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Loaded types:', data);
+                    currentTypeData = data || [];
+                    renderTypes(data || []);
+                })
+                .catch(error => {
+                    console.error('Error loading types:', error);
+                    document.getElementById('typesList').innerHTML = 
+                        '<p style="color: red;">Error loading paper types. Check console for details.</p>';
+                });
+        }
+
+        function renderTypes(data) {
+            const container = document.getElementById('typesList');
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="color: #999; padding: 20px;">No paper types found. Click "Add New Type" to create one.</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                const typeCard = document.createElement('div');
+                typeCard.className = 'type-card';
+                
+                const statusClass = item.type.is_active ? 'status-active' : 'status-inactive';
+                const statusText = item.type.is_active ? 'Active' : 'Inactive';
+                const imageCount = item.images ? item.images.length : 0;
+                
+                typeCard.innerHTML = `
+                    <div class="type-header">
+                        <div>
+                            <h3>
+                                ${item.type.name}
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                <span class="image-count">${imageCount} images</span>
+                            </h3>
+                        </div>
+                        <div class="type-actions">
+                            <button class="btn" onclick="showAddImagesModal(${item.type.id})">➕ Add Images</button>
+                            <button class="btn btn-danger" onclick="removeAllImages(${item.type.id}, '${item.type.name}')">🗑️ Remove All Images</button>
+                            <button class="btn" onclick="showEditTypeModal(${item.type.id})">✏️ Edit</button>
+                            <button class="btn btn-danger" onclick="deleteType(${item.type.id})">🗑️ Delete Type</button>
+                        </div>
+                    </div>
+                    <div class="images-grid" id="images-${item.type.id}">
+                        ${renderImages(item.images)}
+                    </div>
+                `;
+                
+                container.appendChild(typeCard);
+            });
+        }
+
+        function renderImages(images) {
+            if (!images || images.length === 0) {
+                return '<p style="color: #999;">No images yet</p>';
+            }
+            
+            return images.map(img => `
+                <div class="image-item">
+                    <img src="${img.image_url}" alt="Paper image">
+                    <button class="image-delete" onclick="deleteImage(${img.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function showAddTypeModal() {
+            document.getElementById('addTypeModal').style.display = 'block';
+        }
+
+        function showEditTypeModal(typeId) {
+            const typeData = currentTypeData.find(item => item.type.id === typeId);
+            if (!typeData) return;
+            
+            document.getElementById('editTypeId').value = typeId;
+            document.getElementById('editTypeName').value = typeData.type.name;
+            document.getElementById('editTypeDisplayOrder').value = typeData.type.display_order;
+            document.getElementById('editTypeStatus').value = typeData.type.is_active;
+            document.getElementById('editTypeModal').style.display = 'block';
+        }
+
+        function showAddImagesModal(typeId) {
+            document.getElementById('addImagesTypeId').value = typeId;
+            resetUploadModal();
+            document.getElementById('addImagesModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'addImagesModal') {
+                resetUploadModal();
+            }
+        }
+
+        function addType() {
+            const name = document.getElementById('typeName').value;
+            const displayOrder = document.getElementById('typeDisplayOrder').value;
+            
+            if (!name) {
+                alert('Please enter a type name');
+                return;
+            }
+            
+            fetch('/api/admin/paper/types', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    display_order: parseInt(displayOrder)
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to create type');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Type created successfully!');
+                // Clear form
+                document.getElementById('typeName').value = '';
+                document.getElementById('typeDisplayOrder').value = '0';
+                closeModal('addTypeModal');
+                // Reload types to show the new one
+                loadTypes();
+            })
+            .catch(error => {
+                alert('Error creating type: ' + error.message);
+                console.error('Error:', error);
+            });
+        }
+
+        function updateType() {
+            const id = document.getElementById('editTypeId').value;
+            const name = document.getElementById('editTypeName').value;
+            const displayOrder = document.getElementById('editTypeDisplayOrder').value;
+            const isActive = document.getElementById('editTypeStatus').value === 'true';
+            
+            fetch(`/api/admin/paper/types/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    display_order: parseInt(displayOrder),
+                    is_active: isActive
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to update type');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Type updated successfully!');
+                closeModal('editTypeModal');
+                loadTypes();
+            })
+            .catch(error => {
+                alert('Error updating type: ' + error.message);
+                console.error('Error:', error);
+            });
+        }
+
+        function deleteType(typeId) {
+            if (!confirm('Are you sure you want to delete this type? All images will also be deleted.')) {
+                return;
+            }
+            
+            fetch(`/api/admin/paper/types/${typeId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to delete type');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Type deleted successfully!');
+                loadTypes();
+            })
+            .catch(error => {
+                alert('Error deleting type: ' + error.message);
+                console.error('Error:', error);
+            });
+        }
+
+        async function removeAllImages(typeId, typeName) {
+            if (!confirm(`Are you sure you want to remove ALL images from "${typeName}"?\n\nThis will delete all images but keep the paper type.`)) {
+                return;
+            }
+            
+            try {
+                // Fetch all images for this type
+                const response = await fetch(`/api/paper/types/${typeId}/images`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch images');
+                }
+                
+                const images = await response.json();
+                
+                if (images.length === 0) {
+                    alert('No images to delete for this type.');
+                    return;
+                }
+                
+                // Confirm again with count
+                if (!confirm(`Found ${images.length} images. Continue with deletion?`)) {
+                    return;
+                }
+                
+                // Delete each image
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (const image of images) {
+                    try {
+                        const deleteResponse = await fetch(`/api/admin/paper/images/${image.id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (error) {
+                        console.error('Error deleting image:', image.id, error);
+                        failCount++;
+                    }
+                }
+                
+                // Show result
+                if (failCount === 0) {
+                    alert(`Successfully removed all ${successCount} images from "${typeName}"!`);
+                } else {
+                    alert(`Removed ${successCount} images, but ${failCount} failed to delete.`);
+                }
+                
+                // Reload the types to show updated count
+                loadTypes();
+                
+            } catch (error) {
+                alert('Error removing images: ' + error.message);
+                console.error('Error:', error);
+            }
+        }
+
+        // Image upload handling
+        let selectedFiles = [];
+        let uploadedUrls = [];
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            selectedFiles = files;
+            
+            // Show preview area
+            document.getElementById('imagePreviewArea').style.display = 'block';
+            document.getElementById('uploadBtn').style.display = 'inline-block';
+            
+            // Update count
+            document.getElementById('imageCount').textContent = files.length;
+            
+            // Clear previous previews
+            const previewContainer = document.getElementById('imagePreviews');
+            previewContainer.innerHTML = '';
+            
+            // Create previews
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'image-preview-item';
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button class="image-preview-remove" onclick="removeSelectedImage(${index})" title="Remove">×</button>
+                    `;
+                    previewContainer.appendChild(previewDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeSelectedImage(index) {
+            selectedFiles.splice(index, 1);
+            
+            // Re-trigger the preview update
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            document.getElementById('fileInput').files = dataTransfer.files;
+            
+            // Update preview
+            handleFileSelect({ target: { files: selectedFiles } });
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('imagePreviewArea').style.display = 'none';
+                document.getElementById('uploadBtn').style.display = 'none';
+            }
+        }
+
+        async function uploadImages() {
+            if (selectedFiles.length === 0) {
+                alert('Please select images first');
+                return;
+            }
+
+            const typeId = document.getElementById('addImagesTypeId').value;
+            
+            // Show progress
+            document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('uploadBtn').disabled = true;
+            
+            uploadedUrls = [];
+            let uploaded = 0;
+            const total = selectedFiles.length;
+            
+            // Upload files one by one
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch('/api/admin/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Upload failed');
+                    }
+                    
+                    const data = await response.json();
+                    uploadedUrls.push(data.image_url);
+                    
+                    uploaded++;
+                    const progress = Math.round((uploaded / total) * 100);
+                    
+                    // Update progress bar
+                    document.getElementById('uploadStatus').textContent = `${uploaded} / ${total}`;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressBar').textContent = progress + '%';
+                    
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert(`Failed to upload ${file.name}`);
+                }
+            }
+            
+            // Save URLs to database
+            if (uploadedUrls.length > 0) {
+                try {
+                    const response = await fetch('/api/admin/paper/images/batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type_id: parseInt(typeId),
+                            image_urls: uploadedUrls
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to save to database');
+                    }
+                    
+                    const data = await response.json();
+                    alert(`✅ Successfully uploaded and saved ${data.count} images!`);
+                    
+                    // Reset and close
+                    resetUploadModal();
+                    closeModal('addImagesModal');
+                    loadTypes();
+                    
+                } catch (error) {
+                    alert('Images uploaded but failed to save to database: ' + error.message);
+                    console.error('Error:', error);
+                }
+            }
+            
+            document.getElementById('uploadBtn').disabled = false;
+        }
+
+        function resetUploadModal() {
+            selectedFiles = [];
+            uploadedUrls = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreviewArea').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('uploadBtn').style.display = 'none';
+            document.getElementById('imagePreviews').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').textContent = '0%';
+            document.getElementById('uploadStatus').textContent = '0 / 0';
+        }
+
+        function deleteImage(imageId) {
+            if (!confirm('Are you sure you want to delete this image?')) {
+                return;
+            }
+            
+            fetch(`/api/admin/paper/images/${imageId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to delete image');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Image deleted successfully!');
+                loadTypes();
+            })
+            .catch(error => {
+                alert('Error deleting image: ' + error.message);
+                console.error('Error:', error);
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

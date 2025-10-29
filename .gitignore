@@ -1,0 +1,44 @@
+# Database files
+*.db
+*.db-shm
+*.db-wal
+burma2d.db
+
+# Uploads directory
+uploads/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+masterserver
+thaimasterserver
+new2dserver
+2dexpectprivacy
+burma2d-server
+apirunner
+
+# Test binaries
+*.test
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Logs
+*.log
+server.log
+server_test.log
+server_debug.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+#Firebase files
+dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json

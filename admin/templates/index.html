@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burma 2D 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        h1 {
+            font-size: 5em;
+            color: #2196F3;
+            margin-bottom: 20px;
+            font-weight: 700;
+            animation: slideInScale 1.5s ease-out, colorShift 3s ease-in-out infinite alternate;
+            transform-origin: center;
+        }
+        
+        .developer {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: 400;
+            animation: fadeInUp 2s ease-out;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        
+        @keyframes slideInScale {
+            0% {
+                transform: translateY(-100px) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(20px) scale(1.1);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes colorShift {
+            0% {
+                color: #2196F3;
+                text-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+            }
+            100% {
+                color: #1976D2;
+                text-shadow: 0 0 30px rgba(33, 150, 243, 0.5);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3em;
+            }
+            
+            .developer {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Burma 2D 2025</h1>
+    <p class="developer">Developed by Royal Burma 2D Group</p>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Gift - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #2a5298;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #2a5298;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3c72;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+
+        .image-preview img {
+            width: 100%;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Edit Gift</h1>
+            <div class="breadcrumb">
+                <a href="/admin">Dashboard</a> / <a href="/admin/gifts">Manage Gifts</a> / Edit Gift
+            </div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+        <div id="loading" class="loading">Loading gift data...</div>
+
+        <div id="formCard" class="form-card" style="display: none;">
+            <form id="editGiftForm">
+                <input type="hidden" id="giftId" name="id">
+
+                <div class="form-group">
+                    <label for="name">Gift Name *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="imageFile">Gift Image</label>
+                    <input type="file" id="imageFile" name="image" accept="image/*">
+                    <div class="help-text" style="font-size: 12px; color: #666; margin-top: 5px;">Leave empty to keep current image. Upload new image (JPG, PNG, GIF, WebP) to replace.</div>
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Image preview">
+                    </div>
+                    <input type="hidden" id="imageLink" name="image_link">
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Gift Type *</label>
+                    <select id="type" name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Enter gift description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="points">Points Required *</label>
+                    <input type="number" id="points" name="points" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="stock">Stock Quantity *</label>
+                    <input type="number" id="stock" name="stock" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isActive" name="is_active">
+                        <label for="isActive">Active (visible to users)</label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Update Gift</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/gifts'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const giftId = window.location.pathname.split('/').pop();
+
+        // Load gift data
+        async function loadGift() {
+            try {
+                const response = await fetch(`/api/admin/gifts/${giftId}`);
+                if (!response.ok) throw new Error('Failed to load gift');
+                
+                const gift = await response.json();
+                
+                // Populate form
+                document.getElementById('giftId').value = gift.id;
+                document.getElementById('name').value = gift.name;
+                document.getElementById('imageLink').value = gift.image_link;
+                document.getElementById('type').value = gift.type;
+                document.getElementById('description').value = gift.description || '';
+                document.getElementById('points').value = gift.points;
+                document.getElementById('stock').value = gift.stock;
+                document.getElementById('isActive').checked = gift.is_active;
+
+                // Show image preview
+                if (gift.image_link) {
+                    document.getElementById('previewImg').src = gift.image_link;
+                    document.getElementById('imagePreview').style.display = 'block';
+                }
+
+                // Show form
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('formCard').style.display = 'block';
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showAlert('Failed to load gift data: ' + error.message, 'error');
+            }
+        }
+
+        // Image preview on file change
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('editGiftForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            let imageUrl = document.getElementById('imageLink').value;
+
+            // Check if a new image was uploaded
+            const imageFile = document.getElementById('imageFile').files[0];
+            if (imageFile) {
+                showAlert('Uploading image...', 'info');
+                
+                try {
+                    // Upload new image
+                    const formData = new FormData();
+                    formData.append('image', imageFile);
+
+                    const uploadResponse = await fetch('/api/admin/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!uploadResponse.ok) {
+                        const error = await uploadResponse.json();
+                        throw new Error(error.error || 'Failed to upload image');
+                    }
+
+                    const uploadResult = await uploadResponse.json();
+                    imageUrl = uploadResult.image_url;
+                } catch (error) {
+                    showAlert('Error uploading image: ' + error.message, 'error');
+                    return;
+                }
+            }
+
+            const giftData = {
+                id: parseInt(document.getElementById('giftId').value),
+                name: document.getElementById('name').value,
+                image_link: imageUrl,
+                type: document.getElementById('type').value,
+                description: document.getElementById('description').value,
+                points: parseInt(document.getElementById('points').value),
+                stock: parseInt(document.getElementById('stock').value),
+                is_active: document.getElementById('isActive').checked
+            };
+
+            try {
+                const response = await fetch(`/api/admin/gifts/${giftId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(giftData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update gift');
+                }
+
+                showAlert('Gift updated successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin/gifts';
+                }, 1500);
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert ' + type;
+            alert.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Load gift data on page load
+        loadGift();
+    </script>
+</body>
+</html>

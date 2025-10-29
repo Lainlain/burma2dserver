@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 {
+            color: #1e3c72;
+            font-size: 28px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #1e3c72;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #2a5298;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f8f9fa;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .slider-image {
+            width: 120px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .empty {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ Manage Sliders</h1>
+            <div>
+                <a href="/admin" class="btn" style="margin-right: 10px;">← Dashboard</a>
+                <a href="/admin/sliders/create" class="btn btn-success">+ Add New Slider</a>
+            </div>
+        </header>
+
+        <div class="content">
+            <div id="loading" class="loading">Loading sliders...</div>
+            <div id="empty" class="empty" style="display: none;">
+                <p style="font-size: 48px;">🖼️</p>
+                <h3>No sliders yet</h3>
+                <p>Click "Add New Slider" to create your first carousel slide.</p>
+            </div>
+            <table id="slidersTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Forward Link</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="slidersBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadSliders() {
+            try {
+                const response = await fetch('/api/admin/sliders');
+                const sliders = await response.json();
+                
+                const loading = document.getElementById('loading');
+                const empty = document.getElementById('empty');
+                const table = document.getElementById('slidersTable');
+                const tbody = document.getElementById('slidersBody');
+
+                loading.style.display = 'none';
+
+                if (sliders.length === 0) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                table.style.display = 'table';
+                tbody.innerHTML = sliders.map(slider => `
+                    <tr>
+                        <td>${slider.id}</td>
+                        <td><img src="${slider.image_link}" alt="${slider.title}" class="slider-image" onerror="this.src='https://via.placeholder.com/120x60'"></td>
+                        <td><strong>${slider.title || 'Untitled'}</strong></td>
+                        <td><small style="color: #666;">${slider.forward_link || 'No link'}</small></td>
+                        <td>${slider.order}</td>
+                        <td><span class="badge badge-${slider.is_active ? 'active' : 'inactive'}">${slider.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <div class="actions">
+                                <a href="/admin/sliders/edit/${slider.id}" class="btn btn-small">Edit</a>
+                                <button onclick="deleteSlider(${slider.id})" class="btn btn-small btn-danger">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading sliders:', error);
+                document.getElementById('loading').innerHTML = '<p style="color: red;">Error loading sliders</p>';
+            }
+        }
+
+        async function deleteSlider(id) {
+            if (!confirm('Are you sure you want to delete this slider?')) return;
+
+            try {
+                const response = await fetch(`/api/admin/sliders/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Slider deleted successfully');
+                    loadSliders();
+                } else {
+                    alert('Failed to delete slider');
+                }
+            } catch (error) {
+                console.error('Error deleting slider:', error);
+                alert('Error deleting slider');
+            }
+        }
+
+        loadSliders();
+    </script>
+</body>
+</html>
