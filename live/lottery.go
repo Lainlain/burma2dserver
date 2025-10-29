@@ -31,21 +31,21 @@ type LotteryDataInput struct {
 
 // LotteryData represents the lottery information with new JSON key format for output
 type LotteryData struct {
-	Date        string `json:"date"`
-	Live        string `json:"live"`
-	Status      string `json:"status"`
-	Set1200     string `json:"t1200_set"`
-	Value1200   string `json:"t1200_val"`
-	Result1200  string `json:"t1200_result"`
-	Set430      string `json:"t0430_set"`
-	Value430    string `json:"t0430_val"`
-	Result430   string `json:"t0430_result"`
-	Modern930   string `json:"t0930_modern"`
-	Internet930 string `json:"t0930_internet"`
-	Modern200   string `json:"t0200_modern"`
-	Internet200 string `json:"t0200_internet"`
-	UpdateTime  string `json:"updatetime"`
-	ViewCount   int    `json:"viewCount"`
+	Date        string `json:"draw_date"`
+	Live        string `json:"live_number"`
+	Status      string `json:"service_status"`
+	Set1200     string `json:"noon_set"`
+	Value1200   string `json:"noon_value"`
+	Result1200  string `json:"noon_result"`
+	Set430      string `json:"evening_set"`
+	Value430    string `json:"evening_value"`
+	Result430   string `json:"evening_result"`
+	Modern930   string `json:"morning_modern"`
+	Internet930 string `json:"morning_internet"`
+	Modern200   string `json:"afternoon_modern"`
+	Internet200 string `json:"afternoon_internet"`
+	UpdateTime  string `json:"last_update"`
+	ViewCount   int    `json:"active_viewers"`
 }
 
 // ToLotteryData converts LotteryDataInput to LotteryData
@@ -142,7 +142,7 @@ func UpdateLotteryData(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"status":  "success",
-		"message": "Lottery data updated successfully",
+		"message": "Data updated successfully",
 		"data":    newData,
 	})
 }

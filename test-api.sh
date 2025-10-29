@@ -13,15 +13,14 @@ curl -s http://localhost:8080/ | jq .
 echo ""
 echo ""
 
-# Test 2: Get current lottery data
-echo "2️⃣  Getting current lottery data..."
-curl -s http://localhost:8080/api/lottery/current | jq .
-echo ""
-echo ""
+# Test current data
+echo "📊 Testing GET /api/burma2d/live..."
+curl -s http://localhost:4545/api/burma2d/live | jq .
 
-# Test 3: Update lottery data with sample JSON
-echo "3️⃣  Updating lottery data (POST request)..."
-curl -X POST http://localhost:8080/api/lottery/update \
+# Test update endpoint
+echo ""
+echo "📮 Testing POST /api/burma2d/update..."
+curl -X POST http://localhost:4545/api/burma2d/update \
   -H "Content-Type: application/json" \
   -d '{
     "live": "22",
@@ -43,7 +42,7 @@ echo ""
 
 # Test 4: Get updated lottery data
 echo "4️⃣  Getting updated lottery data..."
-curl -s http://localhost:8080/api/lottery/current | jq .
+curl -s http://localhost:4545/api/burma2d/live | jq .
 echo ""
 echo ""
 
@@ -52,8 +51,8 @@ echo "✅ All tests completed!"
 echo "========================================"
 echo ""
 echo "📡 To test SSE streaming, open another terminal and run:"
-echo "   curl -N http://localhost:8080/api/lottery/stream"
+echo "   curl -N http://localhost:4545/api/burma2d/stream"
 echo ""
 echo "📮 To send updates, use:"
-echo "   curl -X POST http://localhost:8080/api/lottery/update -H 'Content-Type: application/json' -d '{...}'"
+echo "   curl -X POST http://localhost:4545/api/burma2d/update -H 'Content-Type: application/json' -d '{...}'"
 echo ""

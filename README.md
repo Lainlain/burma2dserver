@@ -51,15 +51,15 @@ GET /
 Response: {"message": "Burma2D Lottery Server", "status": "running"}
 ```
 
-### 2. Get Current Lottery Data
+### 2. Get Current Live Data
 ```bash
-GET /api/lottery/current
+GET /api/burma2d/live
 Response: Returns current lottery data in JSON format
 ```
 
-### 3. Update Lottery Data (POST)
+### 3. Update Data (POST - Internal)
 ```bash
-POST /api/lottery/update
+POST /api/burma2d/update
 Content-Type: application/json
 
 Body:
@@ -82,7 +82,7 @@ Body:
 
 ### 4. Real-Time SSE Stream 📡
 ```bash
-GET /api/lottery/stream
+GET /api/burma2d/stream
 Content-Type: text/event-stream
 
 # Streams real-time lottery updates to all connected clients
@@ -142,12 +142,12 @@ chmod +x test-api.sh
 
 ### 4. Test SSE Streaming (Open separate terminal)
 ```bash
-curl -N http://localhost:8080/api/lottery/stream
+curl -N http://localhost:4545/api/burma2d/stream
 ```
 
 ### 5. Send Lottery Updates
 ```bash
-curl -X POST http://localhost:8080/api/lottery/update \
+curl -X POST http://localhost:4545/api/burma2d/update \
   -H "Content-Type: application/json" \
   -d '{
     "live": "22",
@@ -168,32 +168,22 @@ curl -X POST http://localhost:8080/api/lottery/update \
 
 ---
 
-## 🔄 How SSE Works
+## 🔄 How SSE Streaming Works
 
-1. **Client connects** to `/api/lottery/stream`
-2. **Server registers** client in SSE manager
-3. **When data updates** via POST to `/api/lottery/update`:
-   - Server updates current lottery data
-   - Broadcasts update to all connected SSE clients
-4. **Clients receive** real-time updates automatically
-5. **On disconnect**, client is automatically removed
+1. **Client connects** to `/api/burma2d/stream`
+2. **Client added to active clients map** with mutex protection
+3. **When data updates** via POST to `/api/burma2d/update`:
 
 ---
 
-## 🎯 Use Cases
+## 🎯 Usage Example
 
-### Client Integration
-- Connect clients to `http://localhost:4545/api/lottery/stream`
-- Receive real-time lottery updates without polling
-- Update UI automatically when new data arrives
+**For client apps (Vue/Kotlin):**
+- Connect clients to `http://localhost:4545/api/burma2d/stream`
+- Auto-receive updates when server broadcasts
 
-### Admin Panel
-- POST lottery results to `/api/lottery/update`
-- All connected clients get updates instantly
-
-### Dashboard Monitoring
-- Multiple clients can connect to SSE stream
-- All see synchronized real-time lottery data
+**For API data source:**
+- POST lottery results to `/api/burma2d/update`
 
 ---
 
@@ -242,10 +232,8 @@ Automatically installed when building with `go build`
 
 ## 🧪 Testing Workflow
 
-1. **Start server**: `./thaimaster2d-server`
-2. **Open terminal 1**: `curl -N http://localhost:8080/api/lottery/stream` (keep open)
-3. **Open terminal 2**: Run `./test-api.sh`
-4. **See real-time updates** in terminal 1 as POST requests are sent
+1. **Open terminal 1**: `go run main.go` (server running)
+2. **Open terminal 2**: `curl -N http://localhost:4545/api/burma2d/stream` (keep open)
 
 ---
 

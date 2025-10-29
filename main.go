@@ -102,30 +102,30 @@ func main() {
 		log.Println("✅ History auto-insert enabled (16:30-16:35 GMT+6:30)")
 	}
 
-	// Routes - Game API (rebranded from lottery)
-	r.POST("/api/game/update", live.UpdateLotteryData)
-	r.GET("/api/game/stream", live.StreamLotteryData)
-	r.GET("/api/game/current", live.GetCurrentData)
+	// Routes - Burma2D API (public endpoints)
+	r.POST("/api/burma2d/update", live.UpdateLotteryData)
+	r.GET("/api/burma2d/stream", live.StreamLotteryData)
+	r.GET("/api/burma2d/live", live.GetCurrentData)
 
-	// History routes (rebranded)
-	r.GET("/api/game/history", twodhistory.GetHistoryHandler)
-	r.POST("/api/game/history/check", twodhistory.CheckAndInsertHandler)
+	// History routes
+	r.GET("/api/burma2d/history", twodhistory.GetHistoryHandler)
+	r.POST("/api/burma2d/history/check", twodhistory.CheckAndInsertHandler)
 
-	// Rewards routes (rebranded from gifts)
-	r.GET("/api/game/rewards", gift.GetGiftsHandler)
+	// Gifts routes
+	r.GET("/api/burma2d/gifts", gift.GetGiftsHandler)
 
-	// Banners routes (rebranded from sliders)
-	r.GET("/api/game/banners", slider.GetSlidersHandler)
+	// Sliders routes
+	r.GET("/api/burma2d/sliders", slider.GetSlidersHandler)
 
 	// 3D routes
-	r.GET("/api/game/3d", threed.GetAllResults)
-	r.POST("/api/game/3d", threed.CreateResult)
-	r.PUT("/api/game/3d", threed.UpdateResult)
-	r.DELETE("/api/game/3d", threed.DeleteResult)
+	r.GET("/api/burma2d/3d", threed.GetAllResults)
+	r.POST("/api/burma2d/3d", threed.CreateResult)
+	r.PUT("/api/burma2d/3d", threed.UpdateResult)
+	r.DELETE("/api/burma2d/3d", threed.DeleteResult)
 
-	// Guides routes (rebranded from paper)
-	r.GET("/api/game/guides/types", paper.GetAllTypes)
-	r.GET("/api/game/guides/types/:type_id/images", paper.GetImagesByType)
+	// Paper routes
+	r.GET("/api/burma2d/papers/types", paper.GetAllTypes)
+	r.GET("/api/burma2d/papers/types/:type_id/images", paper.GetImagesByType)
 
 	// Image serving route - static files from uploads directory
 	r.Static("/uploads", "./uploads")
@@ -280,9 +280,9 @@ func main() {
 
 	// Start server
 	log.Println("🚀 Server starting on :4545")
-	log.Println("📡 SSE Stream available at: http://localhost:4545/api/game/stream")
-	log.Println("📮 POST game data to: http://localhost:4545/api/game/update")
-	log.Println("📜 History data at: http://localhost:4545/api/game/history")
+	log.Println("📡 SSE Stream available at: http://localhost:4545/api/burma2d/stream")
+	log.Println("📮 POST data to: http://localhost:4545/api/burma2d/update")
+	log.Println("📜 History data at: http://localhost:4545/api/burma2d/history")
 	if err := r.Run(":4545"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
