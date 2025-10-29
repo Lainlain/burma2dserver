@@ -1,4 +1,4 @@
-# 🎰 ThaiMaster2D Lottery Server
+# 🎰 Burma2D Lottery Server
 
 A real-time lottery data server built with **Go** and **Gin framework** that streams lottery updates using **Server-Sent Events (SSE)**.
 
@@ -36,7 +36,7 @@ Go/
 ├── go.mod                  # Go module dependencies
 ├── go.sum                  # Dependency checksums
 ├── test-api.sh            # API testing script
-├── thaimaster2d-server    # Compiled binary
+├── burma2d-server    # Compiled binary
 └── live/
     └── lottery.go         # Live lottery package (SSE + data management)
 ```
@@ -48,7 +48,7 @@ Go/
 ### 1. Health Check
 ```bash
 GET /
-Response: {"message": "ThaiMaster2D Lottery Server", "status": "running"}
+Response: {"message": "Burma2D Lottery Server", "status": "running"}
 ```
 
 ### 2. Get Current Lottery Data
@@ -124,15 +124,15 @@ type LotteryData struct {
 
 ### 1. Build the Server
 ```bash
-cd "/home/lainlain/Desktop/Go Lang /aungthuta/Go"
-go build -o thaimaster2d-server
+cd "/home/lainlain/Desktop/Go Lang /Burma2D/Go"
+go build -o burma2d-server
 ```
 
 ### 2. Run the Server
 ```bash
-./thaimaster2d-server
+./burma2d-server
 ```
-Server starts on `http://localhost:8080`
+Server starts on `http://localhost:4545`
 
 ### 3. Test the API
 ```bash
@@ -182,8 +182,8 @@ curl -X POST http://localhost:8080/api/lottery/update \
 
 ## 🎯 Use Cases
 
-### Android App Integration
-- Connect Kotlin app to `http://localhost:8080/api/lottery/stream`
+### Client Integration
+- Connect clients to `http://localhost:4545/api/lottery/stream`
 - Receive real-time lottery updates without polling
 - Update UI automatically when new data arrives
 
