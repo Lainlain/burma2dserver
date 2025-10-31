@@ -2,6 +2,7 @@ package main
 
 import (
 	"burma2d/admin"
+	"burma2d/chat"
 	"burma2d/fcm"
 	"burma2d/gift"
 	"burma2d/live"
@@ -68,7 +69,19 @@ func main() {
 		admin.InitDB(db)
 		threed.InitDB(db)
 		paper.InitDB(db)
+		chat.InitDB(db)
 		log.Println("✅ All database modules initialized!")
+	}
+
+	// Configure Google OAuth for chat (REPLACE WITH YOUR ACTUAL CLIENT ID)
+	// Get this from Firebase Console > Project Settings > General > Web API Key
+	// Or from Google Cloud Console > APIs & Services > Credentials
+	googleClientID := os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
+	if googleClientID == "" {
+		log.Println("⚠️ Warning: GOOGLE_OAUTH_CLIENT_ID not set - using development mode")
+		log.Println("⚠️ Set environment variable or replace with actual client ID for production")
+	} else {
+		chat.SetGoogleClientID(googleClientID)
 	}
 
 	// Initialize live package
@@ -277,6 +290,9 @@ func main() {
 		r.POST("/api/admin/paper/images/batch", paper.BatchCreateImages)
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
+
+		// Chat routes
+		chat.RegisterRoutes(r)
 	}
 
 	// Privacy Policy route (public)
