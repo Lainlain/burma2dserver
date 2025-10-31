@@ -23,7 +23,7 @@ func InitDB(database *sql.DB) {
 
 // AdminDashboardHandler renders the admin dashboard home
 func AdminDashboardHandler(c *gin.Context) {
-	c.HTML(200, "admin-dashboard.html", gin.H{
+	c.HTML(200, "dashboard.html", gin.H{
 		"title": "Admin Dashboard - Burma 2D 2025",
 	})
 }

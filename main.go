@@ -1,10 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"syscall"
 	"burma2d/admin"
 	"burma2d/fcm"
 	"burma2d/gift"
@@ -13,6 +9,10 @@ import (
 	"burma2d/slider"
 	"burma2d/threed"
 	"burma2d/twodhistory"
+	"fmt"
+	"log"
+	"os"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,11 @@ import (
 func main() {
 	// Set umask to 0022 so files are created with correct permissions
 	// This means new files will be 644 and directories 755
-	syscall.Umask(0022)
+	// Note: umask is Unix-specific, skipped on Windows
+	if runtime.GOOS != "windows" {
+		// syscall.Umask(0022) - would be used on Unix systems
+		log.Println("ℹ️  Running on Windows - file permissions handled by OS")
+	}
 
 	// Create Gin router
 	r := gin.Default()
@@ -113,6 +117,13 @@ func main() {
 
 	// Gifts routes
 	r.GET("/api/burma2d/gifts", gift.GetGiftsHandler)
+	r.GET("/api/burma2d/gifts/types", gift.GetGiftTypesHandler)
+
+	// Admin Gift Types CRUD
+	r.GET("/api/admin/gift-types", gift.GetAllGiftTypesHandler)
+	r.POST("/api/admin/gift-types", gift.CreateGiftTypeHandler)
+	r.PUT("/api/admin/gift-types/:id", gift.UpdateGiftTypeHandler)
+	r.DELETE("/api/admin/gift-types/:id", gift.DeleteGiftTypeHandler)
 
 	// Sliders routes
 	r.GET("/api/burma2d/sliders", slider.GetSlidersHandler)
@@ -279,11 +290,12 @@ func main() {
 	})
 
 	// Start server
-	log.Println("🚀 Server starting on :4545")
+	log.Println("🚀 Server starting on 0.0.0.0:4545")
 	log.Println("📡 SSE Stream available at: http://localhost:4545/api/burma2d/stream")
-	log.Println("📮 POST data to: http://localhost:4545/api/burma2d/update")
+	log.Println("� Emulator access at: http://10.0.2.2:4545/api/burma2d/stream")
+	log.Println("�📮 POST data to: http://localhost:4545/api/burma2d/update")
 	log.Println("📜 History data at: http://localhost:4545/api/burma2d/history")
-	if err := r.Run(":4545"); err != nil {
+	if err := r.Run("0.0.0.0:4545"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }

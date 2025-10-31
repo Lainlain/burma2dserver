@@ -219,6 +219,12 @@ func GetHistoryHandler(c *gin.Context) {
 		return
 	}
 
+	// Return empty array instead of null when no data
+	if histories == nil || len(histories) == 0 {
+		c.JSON(200, []TwoDHistory{})
+		return
+	}
+
 	c.JSON(200, histories)
 }
 
