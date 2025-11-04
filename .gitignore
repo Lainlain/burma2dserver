@@ -41,4 +41,7 @@ temp/
 *.tmp
 
 #Firebase files
+#Firebase files
 dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json
+burma2d-67734-firebase-adminsdk-fbsvc-f40c69cacd.json
+*-firebase-adminsdk-*.json
