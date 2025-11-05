@@ -116,7 +116,7 @@ func InsertHistory(history *TwoDHistory) error {
 		date, set1200, value1200, result1200,
 		set430, value430, result430,
 		modern930, internet930, modern200, internet200
-	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	_, err = db.Exec(query,
@@ -167,7 +167,7 @@ func InsertFromLotteryData(data *LotteryData) error {
 // DateExists checks if a history record for the given date already exists
 func DateExists(date string) (bool, error) {
 	var count int
-	query := "SELECT COUNT(*) FROM twodhistory WHERE date = $1"
+	query := "SELECT COUNT(*) FROM twodhistory WHERE date = ?"
 	err := db.QueryRow(query, date).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("failed to check date existence: %w", err)
