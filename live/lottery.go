@@ -50,20 +50,35 @@ type LotteryData struct {
 
 // ToLotteryData converts LotteryDataInput to LotteryData
 func (input *LotteryDataInput) ToLotteryData() *LotteryData {
+	// Helper function to replace empty strings with "--"
+	defaultVal := func(val string) string {
+		if val == "" {
+			return "--"
+		}
+		return val
+	}
+
+	defaultResult := func(val string) string {
+		if val == "" {
+			return "---"
+		}
+		return val
+	}
+
 	return &LotteryData{
 		Date:        input.Date,
-		Live:        input.Live,
+		Live:        defaultVal(input.Live),
 		Status:      input.Status,
-		Set1200:     input.Set1200,
-		Value1200:   input.Value1200,
-		Result1200:  input.Result1200,
-		Set430:      input.Set430,
-		Value430:    input.Value430,
-		Result430:   input.Result430,
-		Modern930:   input.Modern930,
-		Internet930: input.Internet930,
-		Modern200:   input.Modern200,
-		Internet200: input.Internet200,
+		Set1200:     defaultVal(input.Set1200),
+		Value1200:   defaultVal(input.Value1200),
+		Result1200:  defaultResult(input.Result1200),
+		Set430:      defaultVal(input.Set430),
+		Value430:    defaultVal(input.Value430),
+		Result430:   defaultResult(input.Result430),
+		Modern930:   defaultVal(input.Modern930),
+		Internet930: defaultVal(input.Internet930),
+		Modern200:   defaultVal(input.Modern200),
+		Internet200: defaultVal(input.Internet200),
 		UpdateTime:  input.UpdateTime,
 		ViewCount:   0, // Will be set by server
 	}

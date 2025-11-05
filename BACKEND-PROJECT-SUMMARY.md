@@ -74,8 +74,11 @@ Go/
 ├── twodhistory/              # 2D history search
 │   └── history.go            # History handlers
 │
-├── appconfig/                # App configuration
-│   └── appconfig.go          # Config handlers
+├── appconfig/                # App configuration (LEGACY - DO NOT USE for production AppConfig)
+│   └── appconfig.go          # Config handlers (embedded, deprecated).\
+│                             # NOTE: Production AppConfig is managed by the standalone\
+│                             # `appconfig-server/` (port 8080). Do NOT use these handlers\
+│                             # for production app configuration or admin operations.
 │
 └── uploads/                  # Image storage
     ├── 1760634547_212623.png
@@ -120,7 +123,7 @@ Go/
 Host: vmi2656239.contaboserver.net
 IP: 213.136.80.25
 Port: 4545
-Domain: https://me.num.guru
+Domain: http://localhost:4545
 CDN: Cloudflare
 Service: systemd (masterserver.service)
 Working Dir: /www/wwwroot/thaimasterserver
@@ -199,7 +202,7 @@ func ServeImageHandler(c *gin.Context) {
 ```
 
 **Route:** `GET /api/images/:filename`  
-**Example:** `https://me.num.guru/api/images/1760634547_212623.png`
+**Example:** `http://localhost:4545/api/images/1760634547_212623.png`
 
 ---
 
@@ -278,7 +281,7 @@ r.GET("/api/images/:filename", admin.ServeImageHandler)
    ↓
 3. Save to uploads/ directory
    ↓
-4. Generate HTTPS URL: https://me.num.guru/api/images/filename.png
+4. Generate HTTPS URL: http://localhost:4545/api/images/filename.png
    ↓
 5. Return URL to admin panel
    ↓
@@ -366,10 +369,10 @@ func GetBuildInfo() BuildInfo {
 ### Usage
 ```bash
 # Check production version
-curl https://me.num.guru/api/version
+curl http://localhost:4545/api/version
 
 # Verify deployment
-curl https://me.num.guru/api/version | jq .version
+curl http://localhost:4545/api/version | jq .version
 ```
 
 ### Route Registration
@@ -392,7 +395,7 @@ Provider: Contabo VPS
 Hostname: vmi2656239.contaboserver.net
 IP Address: 213.136.80.25
 Port: 4545
-Domain: https://me.num.guru
+Domain: http://localhost:4545
 CDN: Cloudflare
 OS: Linux
 Service: systemd
@@ -435,13 +438,13 @@ sudo systemctl status masterserver
 #### 5.5 Verify Deployment
 ```bash
 # Check version
-curl https://me.num.guru/api/version
+curl http://localhost:4545/api/version
 
 # Check live 2D
-curl https://me.num.guru/api/sse/live2d
+curl http://localhost:4545/api/sse/live2d
 
 # Check image API
-curl https://me.num.guru/api/images/test.png
+curl http://localhost:4545/api/images/test.png
 ```
 
 ### Quick Deploy Script
@@ -462,7 +465,7 @@ ssh root@213.136.80.25 "systemctl restart masterserver"
 
 echo "✅ Checking deployment..."
 sleep 2
-curl -s https://me.num.guru/api/version | jq .
+curl -s http://localhost:4545/api/version | jq .
 
 echo "🎉 Deployment complete!"
 ```
@@ -784,7 +787,7 @@ chmod 755 uploads/
 chmod 644 uploads/*
 
 # Test upload endpoint
-curl -X POST https://me.num.guru/api/paper/images \
+curl -X POST http://localhost:4545/api/paper/images \
   -F "image=@test.png" \
   -F "type_id=1"
 ```
@@ -925,17 +928,17 @@ grep "error" /www/wwwroot/thaimasterserver/server.log
 ### Testing
 ```bash
 # Test version
-curl https://me.num.guru/api/version
+curl http://localhost:4545/api/version
 
 # Test SSE
-curl https://me.num.guru/api/sse/live2d
+curl http://localhost:4545/api/sse/live2d
 
 # Test image API
-curl https://me.num.guru/api/images/test.png
+curl http://localhost:4545/api/images/test.png
 
 # Test with JSON
 curl -H "Content-Type: application/json" \
-  -X POST https://me.num.guru/api/threed/add \
+  -X POST http://localhost:4545/api/threed/add \
   -d '{"date":"2025-10-18","number":"123"}'
 ```
 
@@ -950,11 +953,11 @@ curl -H "Content-Type: application/json" \
 - Final Summary: `/FINAL-PROJECT-SUMMARY.md`
 
 ### Admin Panel
-- URL: https://me.num.guru/admin
+- URL: http://localhost:4545/admin
 - Features: Data management, image upload, CRUD operations
 
 ### Monitoring
-- Version Check: https://me.num.guru/api/version
+- Version Check: http://localhost:4545/api/version
 - Health Check: Service status via systemctl
 - Logs: /www/wwwroot/thaimasterserver/server.log
 
@@ -963,4 +966,4 @@ curl -H "Content-Type: application/json" \
 **Status:** ✅ Production Ready  
 **Last Updated:** October 18, 2025  
 **Version:** 1.0.1  
-**Server:** https://me.num.guru
+**Server:** http://localhost:4545

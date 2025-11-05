@@ -308,9 +308,10 @@ func sendMessageHandler(c *gin.Context) {
 	// Broadcast to all connected clients
 	broadcastMessage(message, req.UserID)
 
+	// Return response matching Android app expectations
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": message,
+		"message_id": messageID,
+		"message":    req.Message,
 	})
 }
 
@@ -503,6 +504,7 @@ func sseStreamHandler(c *gin.Context) {
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("X-Accel-Buffering", "no") // Disable nginx buffering
 
 	// Create client
 	client := &SSEClient{
@@ -534,13 +536,19 @@ func sseStreamHandler(c *gin.Context) {
 	}
 	sendSSE(c.Writer, event)
 
-	// Listen for messages
-	notify := c.Writer.(http.CloseNotifier).CloseNotify()
+	// Create context with cancellation for proper cleanup
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	defer cancel()
 
+	// Heartbeat ticker to keep connection alive (every 15 seconds)
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
+	// Listen for messages
 	for {
 		select {
-		case <-notify:
-			// Client disconnected
+		case <-ctx.Done():
+			// Client disconnected or context cancelled
 			clientsMutex.Lock()
 			delete(clients, userID)
 			clientsMutex.Unlock()
@@ -550,9 +558,22 @@ func sseStreamHandler(c *gin.Context) {
 
 			// Broadcast offline status
 			broadcastOnlineStatus()
+			log.Printf("🔌 SSE client disconnected: %s", userID)
 			return
+		case <-ticker.C:
+			// Send heartbeat to keep connection alive
+			_, err := c.Writer.Write([]byte(": heartbeat\n\n"))
+			if err != nil {
+				log.Printf("❌ SSE heartbeat failed for %s: %v", userID, err)
+				return
+			}
+			c.Writer.(http.Flusher).Flush()
 		case msg := <-client.Channel:
-			c.Writer.Write(msg)
+			_, err := c.Writer.Write(msg)
+			if err != nil {
+				log.Printf("❌ SSE write failed for %s: %v", userID, err)
+				return
+			}
 			c.Writer.(http.Flusher).Flush()
 		}
 	}
@@ -600,10 +621,8 @@ func broadcastMessage(message Message, senderID string) {
 	defer clientsMutex.RUnlock()
 
 	for userID, client := range clients {
-		// Don't send to sender or blocked users
-		if userID == senderID {
-			continue
-		}
+		// Send to everyone including sender (so they see their own message)
+		// But skip blocked users
 
 		// Check if sender is blocked by this user
 		var count int
