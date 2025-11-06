@@ -3,6 +3,7 @@ package paper
 import (
 	"database/sql"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -349,13 +350,61 @@ func UpdateImage(c *gin.Context) {
 func DeleteImage(c *gin.Context) {
 	id := c.Param("id")
 
-	_, err := db.Exec("DELETE FROM paper_images WHERE id = ?", id)
+	// First, get the image URL to delete the actual file
+	var imageURL string
+	err := db.QueryRow("SELECT image_url FROM paper_images WHERE id = ?", id).Scan(&imageURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Image not found"})
+		return
+	}
+
+	// Delete from database first
+	_, err = db.Exec("DELETE FROM paper_images WHERE id = ?", id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Extract filename from URL and delete the physical file
+	// URL format: http://localhost:4545/api/images/filename.png
+	// We need to extract the filename part
+	if imageURL != "" {
+		// Split by "/" and get the last part (filename)
+		parts := splitURL(imageURL)
+		if len(parts) > 0 {
+			filename := parts[len(parts)-1]
+			deletePhysicalFile(filename)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Paper image deleted successfully"})
+}
+
+// Helper function to split URL
+func splitURL(url string) []string {
+	var parts []string
+	currentPart := ""
+	for _, char := range url {
+		if char == '/' {
+			if currentPart != "" {
+				parts = append(parts, currentPart)
+				currentPart = ""
+			}
+		} else {
+			currentPart += string(char)
+		}
+	}
+	if currentPart != "" {
+		parts = append(parts, currentPart)
+	}
+	return parts
+}
+
+// Helper function to delete physical file
+func deletePhysicalFile(filename string) {
+	// Import required packages at top of file: "os" and "path/filepath"
+	filepath := "uploads/" + filename
+	os.Remove(filepath) // Ignore errors - file might already be deleted
 }
 
 // Batch create images
