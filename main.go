@@ -88,7 +88,7 @@ func main() {
 	live.Init()
 
 	// Initialize Firebase Cloud Messaging
-	firebasePath := "./dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json"
+	firebasePath := "./burma2d-67734-firebase-adminsdk-fbsvc-f40c69cacd.json"
 	if err := fcm.InitFCM(firebasePath); err != nil {
 		log.Printf("⚠️ Warning: Firebase FCM initialization failed: %v", err)
 		log.Println("⚠️ Gift notifications will not be sent")
