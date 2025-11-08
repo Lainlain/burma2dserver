@@ -49,7 +49,7 @@ func SendNotificationToTopic(topic, title, body string) error {
 				Body:         body,
 				Sound:        "default",
 				Priority:     messaging.PriorityMax,
-				ChannelID:    "gift_notifications",
+				ChannelID:    "burma2d_gifts",
 				Visibility:   messaging.VisibilityPublic,
 				DefaultSound: true,
 				Tag:          "gift_update",
