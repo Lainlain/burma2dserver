@@ -166,6 +166,7 @@ func RegisterRoutes(router *gin.Engine) {
 		chat.POST("/admin/ban", banUserHandler)
 		chat.POST("/admin/unban", unbanUserHandler)
 		chat.GET("/admin/banned", getBannedUsersHandler)
+		chat.GET("/admin/messages", getAllMessagesHandler)
 
 		// SSE Stream
 		chat.GET("/stream", sseStreamHandler)
@@ -830,6 +831,43 @@ func unbanUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User unbanned successfully",
 		"user_id": req.UserID,
+	})
+}
+
+// getAllMessagesHandler gets all messages for admin (no filtering)
+func getAllMessagesHandler(c *gin.Context) {
+	limit := c.DefaultQuery("limit", "100")
+
+	rows, err := db.Query(`
+		SELECT id, user_id, username, photo_url, message, created_at
+		FROM chat_messages
+		ORDER BY created_at DESC
+		LIMIT ?
+	`, limit)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get messages"})
+		return
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		err := rows.Scan(&msg.ID, &msg.UserID, &msg.Username, &msg.PhotoURL, &msg.Message, &msg.CreatedAt)
+		if err != nil {
+			continue
+		}
+		messages = append(messages, msg)
+	}
+
+	if messages == nil {
+		messages = []Message{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"messages": messages,
+		"count":    len(messages),
 	})
 }
 
