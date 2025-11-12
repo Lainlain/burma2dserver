@@ -121,8 +121,18 @@ func createTables() error {
 			FOREIGN KEY (blocker_id) REFERENCES chat_users(id),
 			FOREIGN KEY (blocked_id) REFERENCES chat_users(id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS chat_banned_users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT NOT NULL UNIQUE,
+			username TEXT NOT NULL,
+			banned_by TEXT DEFAULT 'admin',
+			reason TEXT DEFAULT 'Violation of community guidelines',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES chat_users(id)
+		)`,
 		`CREATE INDEX IF NOT EXISTS idx_messages_created ON chat_messages(created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_users_online ON chat_users(is_online)`,
+		`CREATE INDEX IF NOT EXISTS idx_banned_users ON chat_banned_users(user_id)`,
 	}
 
 	for _, query := range queries {
@@ -151,6 +161,11 @@ func RegisterRoutes(router *gin.Engine) {
 		chat.POST("/block", blockUserHandler)
 		chat.POST("/unblock", unblockUserHandler)
 		chat.GET("/blocked", getBlockedUsersHandler)
+
+		// Admin: Ban Management
+		chat.POST("/admin/ban", banUserHandler)
+		chat.POST("/admin/unban", unbanUserHandler)
+		chat.GET("/admin/banned", getBannedUsersHandler)
 
 		// SSE Stream
 		chat.GET("/stream", sseStreamHandler)
@@ -268,6 +283,15 @@ func sendMessageHandler(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if user is banned
+	if isUserBanned(req.UserID) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You have been banned from the chat",
+			"banned": true,
+		})
 		return
 	}
 
@@ -692,4 +716,165 @@ func sendSSE(w http.ResponseWriter, event SSEEvent) {
 	data, _ := json.Marshal(event)
 	fmt.Fprintf(w, "data: %s\n\n", data)
 	w.(http.Flusher).Flush()
+}
+
+// ============================================
+// Admin Ban Management Handlers
+// ============================================
+
+// banUserHandler bans a user and deletes all their messages
+func banUserHandler(c *gin.Context) {
+	var req struct {
+		UserID   string `json:"user_id" binding:"required"`
+		Reason   string `json:"reason"`
+		BannedBy string `json:"banned_by"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set default reason if not provided
+	if req.Reason == "" {
+		req.Reason = "Violation of community guidelines"
+	}
+
+	// Set default banned_by if not provided
+	if req.BannedBy == "" {
+		req.BannedBy = "admin"
+	}
+
+	// Get username for the user
+	var username string
+	err := db.QueryRow("SELECT username FROM chat_users WHERE id = ?", req.UserID).Scan(&username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Begin transaction
+	tx, err := db.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start transaction"})
+		return
+	}
+	defer tx.Rollback()
+
+	// Insert into banned_users table
+	_, err = tx.Exec(`
+		INSERT INTO chat_banned_users (user_id, username, banned_by, reason)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(user_id) DO UPDATE SET
+			banned_by = excluded.banned_by,
+			reason = excluded.reason,
+			created_at = CURRENT_TIMESTAMP
+	`, req.UserID, username, req.BannedBy, req.Reason)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to ban user"})
+		return
+	}
+
+	// Delete all messages from this user
+	result, err := tx.Exec("DELETE FROM chat_messages WHERE user_id = ?", req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user messages"})
+		return
+	}
+
+	deletedCount, _ := result.RowsAffected()
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+		return
+	}
+
+	log.Printf("✅ User banned: %s (%s) - Deleted %d messages - Reason: %s", username, req.UserID, deletedCount, req.Reason)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":        "User banned successfully",
+		"user_id":        req.UserID,
+		"username":       username,
+		"deleted_messages": deletedCount,
+		"reason":         req.Reason,
+	})
+}
+
+// unbanUserHandler removes a user from the banned list
+func unbanUserHandler(c *gin.Context) {
+	var req struct {
+		UserID string `json:"user_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := db.Exec("DELETE FROM chat_banned_users WHERE user_id = ?", req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unban user"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found in banned list"})
+		return
+	}
+
+	log.Printf("✅ User unbanned: %s", req.UserID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User unbanned successfully",
+		"user_id": req.UserID,
+	})
+}
+
+// getBannedUsersHandler returns list of all banned users
+func getBannedUsersHandler(c *gin.Context) {
+	rows, err := db.Query(`
+		SELECT user_id, username, banned_by, reason, created_at
+		FROM chat_banned_users
+		ORDER BY created_at DESC
+	`)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get banned users"})
+		return
+	}
+	defer rows.Close()
+
+	var bannedUsers []map[string]interface{}
+	for rows.Next() {
+		var userID, username, bannedBy, reason string
+		var createdAt time.Time
+
+		err := rows.Scan(&userID, &username, &bannedBy, &reason, &createdAt)
+		if err != nil {
+			continue
+		}
+
+		bannedUsers = append(bannedUsers, map[string]interface{}{
+			"user_id":    userID,
+			"username":   username,
+			"banned_by":  bannedBy,
+			"reason":     reason,
+			"banned_at":  createdAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"banned_users": bannedUsers,
+		"count":        len(bannedUsers),
+	})
+}
+
+// isUserBanned checks if a user is banned
+func isUserBanned(userID string) bool {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM chat_banned_users WHERE user_id = ?", userID).Scan(&count)
+	return err == nil && count > 0
 }
