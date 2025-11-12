@@ -94,6 +94,12 @@ func main() {
 		log.Println("⚠️ Gift notifications will not be sent")
 	}
 
+	// Initialize Cloudflare R2 for image uploads (optional)
+	if err := admin.InitR2(); err != nil {
+		log.Printf("⚠️ Warning: R2 initialization failed: %v", err)
+		log.Println("⚠️ Falling back to local file storage for uploads")
+	}
+
 	// Register history inserter callback if database is enabled
 	if dbEnabled {
 		live.SetHistoryInserter(func(data *live.LotteryData) error {

@@ -290,7 +290,7 @@ func sendMessageHandler(c *gin.Context) {
 	// Check if user is banned
 	if isUserBanned(req.UserID) {
 		c.JSON(http.StatusForbidden, gin.H{
-			"error": "You have been banned from the chat",
+			"error":  "You have been banned from the chat",
 			"banned": true,
 		})
 		return
@@ -795,11 +795,11 @@ func banUserHandler(c *gin.Context) {
 	log.Printf("✅ User banned: %s (%s) - Deleted %d messages - Reason: %s", username, req.UserID, deletedCount, req.Reason)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":        "User banned successfully",
-		"user_id":        req.UserID,
-		"username":       username,
+		"message":          "User banned successfully",
+		"user_id":          req.UserID,
+		"username":         username,
 		"deleted_messages": deletedCount,
-		"reason":         req.Reason,
+		"reason":           req.Reason,
 	})
 }
 
@@ -896,11 +896,11 @@ func getBannedUsersHandler(c *gin.Context) {
 		}
 
 		bannedUsers = append(bannedUsers, map[string]interface{}{
-			"user_id":    userID,
-			"username":   username,
-			"banned_by":  bannedBy,
-			"reason":     reason,
-			"banned_at":  createdAt,
+			"user_id":   userID,
+			"username":  username,
+			"banned_by": bannedBy,
+			"reason":    reason,
+			"banned_at": createdAt,
 		})
 	}
 

@@ -141,6 +141,7 @@ func GetSliderByIDHandler(c *gin.Context) {
 }
 
 // UploadImageHandler handles image uploads and returns the file path
+// Supports both local storage and Cloudflare R2 (controlled by USE_R2 env var)
 func UploadImageHandler(c *gin.Context) {
 	// Get the file from form data
 	file, err := c.FormFile("image")
@@ -155,6 +156,28 @@ func UploadImageHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Only jpg, png, gif, webp allowed"})
 		return
 	}
+
+	// If R2 is enabled, upload to Cloudflare R2
+	if IsR2Enabled() {
+		imageURL, err := UploadToR2(file)
+		if err != nil {
+			log.Printf("❌ R2 upload failed: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload to R2"})
+			return
+		}
+
+		log.Printf("✅ R2 upload successful: %s", imageURL)
+		c.JSON(http.StatusOK, gin.H{
+			"success":   true,
+			"image_url": imageURL,
+			"filename":  filepath.Base(imageURL),
+			"storage":   "r2",
+		})
+		return
+	}
+
+	// Otherwise, use local storage (original behavior)
+	log.Println("📁 Using local storage (R2 disabled)")
 
 	// Get uploads directory from env or use default
 	uploadsDir := os.Getenv("UPLOADS_PATH")
