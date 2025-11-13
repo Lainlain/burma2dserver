@@ -511,3 +511,51 @@ func GetNextDisplayOrder(typeID int) int {
 	}
 	return order
 }
+
+// Delete all images by type ID
+func DeleteAllImagesByType(c *gin.Context) {
+	typeID := c.Param("type_id")
+
+	// First, get all image URLs to delete physical files
+	rows, err := db.Query("SELECT image_url FROM paper_images WHERE type_id = ?", typeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var imageURLs []string
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		imageURLs = append(imageURLs, url)
+	}
+
+	// Delete all images from database
+	result, err := db.Exec("DELETE FROM paper_images WHERE type_id = ?", typeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	// Delete physical files
+	for _, imageURL := range imageURLs {
+		if imageURL != "" {
+			parts := splitURL(imageURL)
+			if len(parts) > 0 {
+				filename := parts[len(parts)-1]
+				deletePhysicalFile(filename)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "All images deleted successfully",
+		"count":   rowsAffected,
+	})
+}

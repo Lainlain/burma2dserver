@@ -296,6 +296,7 @@ func main() {
 		r.POST("/api/admin/paper/images/batch", paper.BatchCreateImages)
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
+		r.DELETE("/api/admin/paper/types/:type_id/images", paper.DeleteAllImagesByType)
 
 		// Chat routes
 		chat.RegisterRoutes(r)
