@@ -292,11 +292,11 @@ func main() {
 		r.POST("/api/admin/paper/types", paper.CreateType)
 		r.PUT("/api/admin/paper/types/:id", paper.UpdateType)
 		r.DELETE("/api/admin/paper/types/:id", paper.DeleteType)
+		r.DELETE("/api/admin/paper/type/:type_id/removeall", paper.DeleteAllImagesByType) // Remove all images from a type
 		r.POST("/api/admin/paper/images", paper.CreateImage)
 		r.POST("/api/admin/paper/images/batch", paper.BatchCreateImages)
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
-		r.DELETE("/api/admin/paper/types/:type_id/images", paper.DeleteAllImagesByType)
 
 		// Chat routes
 		chat.RegisterRoutes(r)
