@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -24,26 +23,16 @@ type R2Client struct {
 
 var r2Client *R2Client
 
-// InitR2 initializes the Cloudflare R2 client with credentials from environment
+// InitR2 initializes the Cloudflare R2 client with hardcoded credentials
 func InitR2() error {
-	// Check if R2 is enabled
-	useR2 := os.Getenv("USE_R2")
-	if useR2 != "true" {
-		log.Println("📦 R2 upload disabled (USE_R2 != true), using local storage")
-		r2Client = &R2Client{enabled: false}
-		return nil
-	}
-
-	accountID := os.Getenv("R2_ACCOUNT_ID")
-	accessKeyID := os.Getenv("R2_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("R2_SECRET_ACCESS_KEY")
-	bucketName := os.Getenv("R2_BUCKET_NAME")
-	publicURL := os.Getenv("R2_PUBLIC_URL")
-
-	// Validate required credentials
-	if accountID == "" || accessKeyID == "" || secretAccessKey == "" || bucketName == "" {
-		return fmt.Errorf("missing R2 credentials: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME required")
-	}
+	// Hardcoded R2 credentials
+	accountID := "928f8d753ffd9a6246d5016edbe93035"
+	accessKeyID := "7d2a22232b529d7711f4f55771e6672d"
+	secretAccessKey := "6bc75671f05ab4d445472766190451cec8d4bdac3d780e62e88ad5f2c825cb65"
+	bucketName := "burmatwod"
+	publicURL := "https://pub-8a390288f6fd47db931ec4b23c1e64bc.r2.dev"
+	
+	log.Println("✅ R2 upload enabled with hardcoded credentials")
 
 	// Build R2 endpoint (S3-compatible)
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
