@@ -25,14 +25,14 @@ var r2Client *R2Client
 
 // InitR2 initializes the Cloudflare R2 client with hardcoded credentials
 func InitR2() error {
-	// Hardcoded R2 credentials
+	// Hardcoded R2 credentials - Updated November 15, 2025
 	accountID := "928f8d753ffd9a6246d5016edbe93035"
 	accessKeyID := "7d2a22232b529d7711f4f55771e6672d"
-	secretAccessKey := "6bc75671f05ab4d445472766190451cec8d4bdac3d780e62e88ad5f2c825cb65"
+	secretAccessKey := "6bc75671f05ab4d445472766190451eaeaea18c1ed2e4ad5d8415252ec208ae3"
 	bucketName := "burmatwod"
-	publicURL := "https://pub-8a390288f6fd47db931ec4b23c1e64bc.r2.dev"
-	
-	log.Println("✅ R2 upload enabled with hardcoded credentials")
+	publicURL := "https://pub-05543fc5bedb4a55a1be0c32bab9858a.r2.dev"
+
+	log.Println("✅ R2 upload enabled with hardcoded credentials (updated Nov 15, 2025)")
 
 	// Build R2 endpoint (S3-compatible)
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
