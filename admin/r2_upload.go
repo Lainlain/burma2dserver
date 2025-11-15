@@ -59,15 +59,15 @@ func InitR2() error {
 		o.UsePathStyle = true // Required for R2
 	})
 
-       r2Client = &R2Client{
-	       client:     s3Client,
-	       bucketName: bucketName,
-	       publicURL:  publicURL,
-	       enabled:    false, // Block R2 temporarily
-       }
+	r2Client = &R2Client{
+		client:     s3Client,
+		bucketName: bucketName,
+		publicURL:  publicURL,
+		enabled:    false, // Block R2 temporarily
+	}
 
-       log.Printf("⏸️ Cloudflare R2 temporarily disabled: using local storage only")
-       return nil
+	log.Printf("⏸️ Cloudflare R2 temporarily disabled: using local storage only")
+	return nil
 }
 
 // IsR2Enabled returns whether R2 upload is enabled
