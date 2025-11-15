@@ -76,3 +76,9 @@ func SendGiftAvailableNotification(giftName string) error {
 	// Send to "gifts" topic - all users should subscribe to this topic
 	return SendNotificationToTopic("gifts", title, body)
 }
+
+// SendCustomNotification sends a custom notification to gifts topic
+func SendCustomNotification(title, body string) error {
+	// Send to "gifts" topic
+	return SendNotificationToTopic("gifts", title, body)
+}

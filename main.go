@@ -240,6 +240,9 @@ func main() {
 			c.JSON(200, gin.H{"message": "Gift deleted"})
 		})
 
+		// Send custom notification to gifts topic
+		r.POST("/api/admin/notification", fcm.SendNotificationHandler)
+
 		// Admin API routes for sliders
 		r.GET("/api/admin/sliders", func(c *gin.Context) {
 			sliders, err := slider.GetAllSlidersForAdmin()
