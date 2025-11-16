@@ -16,6 +16,9 @@ import (
 
 var db *sql.DB
 
+// Myanmar timezone (Yangon - GMT+6:30)
+var myanmarLocation *time.Location
+
 // Firebase OAuth Client ID (replace with your actual client ID)
 var googleClientID string
 
@@ -83,6 +86,17 @@ type OnlineStatus struct {
 // InitDB initializes the database
 func InitDB(database *sql.DB) error {
 	db = database
+	
+	// Load Myanmar timezone (Asia/Yangon - GMT+6:30)
+	var err error
+	myanmarLocation, err = time.LoadLocation("Asia/Yangon")
+	if err != nil {
+		log.Printf("⚠️  Failed to load Asia/Yangon timezone, using fixed offset GMT+6:30: %v", err)
+		// Fallback: Create fixed offset for Myanmar (GMT+6:30 = 6.5 hours = 23400 seconds)
+		myanmarLocation = time.FixedZone("Myanmar", 6*3600+30*60)
+	}
+	log.Printf("✅ Chat timezone set to Myanmar (GMT+6:30)")
+	
 	return createTables()
 }
 
@@ -320,14 +334,14 @@ func sendMessageHandler(c *gin.Context) {
 
 	messageID, _ := result.LastInsertId()
 
-	// Create message object
+	// Create message object with Myanmar time (GMT+6:30)
 	message := Message{
 		ID:        messageID,
 		UserID:    req.UserID,
 		Username:  username,
 		PhotoURL:  photoURL,
 		Message:   req.Message,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().In(myanmarLocation),  // Always Myanmar Yangon time
 	}
 
 	// Broadcast to all connected clients
@@ -381,6 +395,8 @@ func getMessagesHandler(c *gin.Context) {
 		if err != nil {
 			continue
 		}
+		// Convert to Myanmar timezone (GMT+6:30)
+		msg.CreatedAt = msg.CreatedAt.In(myanmarLocation)
 		messages = append(messages, msg)
 	}
 
