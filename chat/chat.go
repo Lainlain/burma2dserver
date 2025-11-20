@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -86,7 +87,7 @@ type OnlineStatus struct {
 // InitDB initializes the database
 func InitDB(database *sql.DB) error {
 	db = database
-	
+
 	// Load Myanmar timezone (Asia/Yangon - GMT+6:30)
 	var err error
 	myanmarLocation, err = time.LoadLocation("Asia/Yangon")
@@ -96,7 +97,7 @@ func InitDB(database *sql.DB) error {
 		myanmarLocation = time.FixedZone("Myanmar", 6*3600+30*60)
 	}
 	log.Printf("✅ Chat timezone set to Myanmar (GMT+6:30)")
-	
+
 	return createTables()
 }
 
@@ -341,7 +342,7 @@ func sendMessageHandler(c *gin.Context) {
 		Username:  username,
 		PhotoURL:  photoURL,
 		Message:   req.Message,
-		CreatedAt: time.Now().In(myanmarLocation),  // Always Myanmar Yangon time
+		CreatedAt: time.Now().In(myanmarLocation), // Always Myanmar Yangon time
 	}
 
 	// Broadcast to all connected clients
@@ -357,7 +358,7 @@ func sendMessageHandler(c *gin.Context) {
 // getMessagesHandler gets recent messages
 func getMessagesHandler(c *gin.Context) {
 	userID := c.Query("user_id")
-	limit := c.DefaultQuery("limit", "50")
+	limit := c.DefaultQuery("limit", "30")
 
 	if userID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id required"})
@@ -646,7 +647,8 @@ func getBlockedUserIDs(userID string) (string, error) {
 		return "''", nil
 	}
 
-	return string(ids[0]), nil
+	// Return ALL blocked IDs, not just the first one
+	return strings.Join(ids, ","), nil
 }
 
 func broadcastMessage(message Message, senderID string) {
