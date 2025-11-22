@@ -652,36 +652,71 @@ func getBlockedUserIDs(userID string) (string, error) {
 }
 
 func broadcastMessage(message Message, senderID string) {
+	log.Printf("💬💬💬 BROADCAST MESSAGE CALLED! 💬💬💬")
+	log.Printf("📧 Message: %s", message.Message)
+	log.Printf("👤 Sender: %s (ID: %s)", message.Username, senderID)
+	
 	event := SSEEvent{
 		Type: "message",
 		Data: message,
 	}
 
-	data, _ := json.Marshal(event)
+	data, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("❌ Failed to marshal message event: %v", err)
+		return
+	}
 	sseData := []byte(fmt.Sprintf("data: %s\n\n", data))
+	
+	log.Printf("📦 SSE Data: %s", string(sseData))
+
+	clientsMutex.RLock()
+	connectedClients := len(clients)
+	log.Printf("👥 Connected SSE clients: %d", connectedClients)
+	clientsMutex.RUnlock()
+
+	if connectedClients == 0 {
+		log.Printf("⚠️ No SSE clients connected - message not broadcast")
+		return
+	}
 
 	clientsMutex.RLock()
 	defer clientsMutex.RUnlock()
 
+	sentCount := 0
+	blockedCount := 0
+	
 	for userID, client := range clients {
 		// Send to everyone including sender (so they see their own message)
 		// But skip blocked users
 
 		// Check if sender is blocked by this user
 		var count int
-		db.QueryRow(`
+		err := db.QueryRow(`
 			SELECT COUNT(*) FROM chat_blocks
 			WHERE blocker_id = ? AND blocked_id = ?
 		`, userID, senderID).Scan(&count)
+		
+		if err != nil {
+			log.Printf("⚠️ Error checking block status for user %s: %v", userID, err)
+		}
 
 		if count == 0 {
 			select {
 			case client.Channel <- sseData:
+				sentCount++
+				log.Printf("✅ Sent message to client: %s (%s)", client.Username, userID)
 			default:
 				// Channel full, skip
+				log.Printf("⚠️ Channel full for client: %s (%s)", client.Username, userID)
 			}
+		} else {
+			blockedCount++
+			log.Printf("🚫 Skipped blocked user: %s", userID)
 		}
 	}
+	
+	log.Printf("📊 Broadcast complete: Sent to %d clients, Blocked %d", sentCount, blockedCount)
 }
 
 func broadcastOnlineStatus() {
