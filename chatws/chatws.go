@@ -156,6 +156,14 @@ func createTables() {
 
 // WebSocket handler - main endpoint
 func HandleWebSocket(c *gin.Context) {
+	// Get ID token from query parameter (Android sends it this way)
+	idToken := c.Query("idtoken")
+	if idToken == "" {
+		log.Printf("❌ No ID token provided in query parameter")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "ID token required"})
+		return
+	}
+
 	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -163,8 +171,8 @@ func HandleWebSocket(c *gin.Context) {
 		return
 	}
 
-	// Wait for authentication message
-	client, err := authenticateClient(conn)
+	// Authenticate using the ID token from query parameter
+	client, err := authenticateClientWithToken(conn, idToken)
 	if err != nil {
 		log.Printf("❌ WebSocket authentication failed: %v", err)
 		conn.WriteJSON(map[string]string{"error": "Authentication failed"})
@@ -185,12 +193,63 @@ func HandleWebSocket(c *gin.Context) {
 	// Notify others that user joined
 	broadcastUserJoined(client)
 
-	// Start goroutines for reading and writing
+	// Start write pump in goroutine
 	go client.writePump()
-	go client.readPump()
+
+	// Run read pump in current goroutine (blocks until connection closes)
+	// This keeps the handler alive and prevents premature connection closure
+	client.readPump()
 }
 
-// Authenticate WebSocket client
+// Authenticate WebSocket client with ID token from query parameter
+func authenticateClientWithToken(conn *websocket.Conn, idToken string) (*WSClient, error) {
+	// Verify Google ID token
+	payload, err := idtoken.Validate(context.Background(), idToken, googleClientID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID token: %v", err)
+	}
+
+	userID := payload.Subject
+	email, _ := payload.Claims["email"].(string)
+	name, _ := payload.Claims["name"].(string)
+	picture, _ := payload.Claims["picture"].(string)
+
+	// Use name from token if available
+	username := name
+	if username == "" {
+		username = email
+	}
+
+	// Create or update user in database
+	_, err = db.Exec(`
+		INSERT INTO chatws_users (id, email, username, photo_url, is_online, last_seen)
+		VALUES (?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP)
+		ON CONFLICT(id) DO UPDATE SET
+			username = excluded.username,
+			photo_url = excluded.photo_url,
+			is_online = TRUE,
+			last_seen = CURRENT_TIMESTAMP
+	`, userID, email, username, picture)
+
+	if err != nil {
+		log.Printf("⚠️ Error updating user: %v", err)
+	}
+
+	log.Printf("✅ User authenticated: %s (%s)", username, email)
+
+	// Create client
+	client := &WSClient{
+		UserID:   userID,
+		Username: username,
+		PhotoURL: picture,
+		Conn:     conn,
+		Send:     make(chan []byte, 256),
+	}
+
+	return client, nil
+}
+
+// Authenticate WebSocket client (legacy - for JSON-based auth)
 func authenticateClient(conn *websocket.Conn) (*WSClient, error) {
 	// Set read deadline for authentication
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
@@ -468,7 +527,10 @@ func GetRecentMessagesHandler(c *gin.Context) {
 		messages[i], messages[j] = messages[j], messages[i]
 	}
 
-	c.JSON(http.StatusOK, messages)
+	// Return wrapped in object for Android app compatibility
+	c.JSON(http.StatusOK, gin.H{
+		"messages": messages,
+	})
 }
 
 // HTTP endpoint to get online count
