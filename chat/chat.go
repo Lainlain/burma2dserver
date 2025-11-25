@@ -32,7 +32,7 @@ type SSEClient struct {
 }
 
 var (
-	clients      = make(map[string]*SSEClient)
+	clients      = make(map[chan []byte]*SSEClient)
 	clientsMutex sync.RWMutex
 )
 
@@ -558,7 +558,7 @@ func sseStreamHandler(c *gin.Context) {
 
 	// Register client
 	clientsMutex.Lock()
-	clients[userID] = client
+	clients[client.Channel] = client
 	clientsMutex.Unlock()
 
 	// Set user online
@@ -592,7 +592,7 @@ func sseStreamHandler(c *gin.Context) {
 		case <-ctx.Done():
 			// Client disconnected or context cancelled
 			clientsMutex.Lock()
-			delete(clients, userID)
+			delete(clients, client.Channel)
 			clientsMutex.Unlock()
 
 			// Set user offline
@@ -663,10 +663,10 @@ func broadcastMessage(message Message, senderID string) {
 		log.Printf("❌ Failed to marshal message event: %v", err)
 		return
 	}
-	
+
 	// Format as SSE data
 	sseData := []byte(fmt.Sprintf("data: %s\n\n", data))
-	
+
 	log.Printf("� Broadcasting message from %s: %s", message.Username, message.Message)
 
 	// Get list of users who blocked the sender (do this BEFORE locking)
@@ -689,22 +689,22 @@ func broadcastMessage(message Message, senderID string) {
 	defer clientsMutex.RUnlock()
 
 	sentCount := 0
-	for userID, client := range clients {
+	for clientChan, client := range clients {
 		// Skip if this user blocked the sender
-		if blockedByUsers[userID] {
-			log.Printf("🚫 Skipped user who blocked sender: %s", userID)
+		if blockedByUsers[client.UserID] {
+			log.Printf("🚫 Skipped user who blocked sender: %s", client.UserID)
 			continue
 		}
 
 		// Send to client (non-blocking)
 		select {
-		case client.Channel <- sseData:
+		case clientChan <- sseData:
 			sentCount++
 		default:
-			log.Printf("⚠️ Channel full for user: %s", userID)
+			log.Printf("⚠️ Channel full for user: %s", client.UserID)
 		}
 	}
-	
+
 	log.Printf("✅ Message broadcast complete: Sent to %d/%d clients", sentCount, len(clients))
 }
 

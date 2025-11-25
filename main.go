@@ -3,6 +3,7 @@ package main
 import (
 	"burma2d/admin"
 	"burma2d/chat"
+	"burma2d/chatws"
 	"burma2d/fcm"
 	"burma2d/gift"
 	"burma2d/live"
@@ -70,6 +71,7 @@ func main() {
 		threed.InitDB(db)
 		paper.InitDB(db)
 		chat.InitDB(db)
+		chatws.InitDB(db) // NEW: Initialize WebSocket chat
 		log.Println("✅ All database modules initialized!")
 	}
 
@@ -82,6 +84,7 @@ func main() {
 		log.Println("⚠️ Set environment variable or replace with actual client ID for production")
 	} else {
 		chat.SetGoogleClientID(googleClientID)
+		chatws.SetGoogleClientID(googleClientID) // NEW: Set for WebSocket chat too
 	}
 
 	// Initialize live package
@@ -301,8 +304,14 @@ func main() {
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
 
-		// Chat routes
+		// Chat routes (SSE - existing)
 		chat.RegisterRoutes(r)
+
+		// WebSocket Chat routes (NEW)
+		r.GET("/api/burma2d/chatws", chatws.HandleWebSocket)
+		r.GET("/api/burma2d/chatws/messages", chatws.GetRecentMessagesHandler)
+		r.GET("/api/burma2d/chatws/online", chatws.GetOnlineCountHandler)
+		log.Println("✅ WebSocket chat routes registered at /api/burma2d/chatws")
 	}
 
 	// Privacy Policy route (public)
