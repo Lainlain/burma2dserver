@@ -1,6 +1,7 @@
 package live
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -95,6 +96,17 @@ var (
 	clientsMutex    sync.RWMutex
 	historyInserter HistoryInserter
 	lastCheckTime   time.Time
+	
+	// Performance optimization: Reuse JSON buffers
+	jsonBufferPool = sync.Pool{
+		New: func() interface{} {
+			return new(bytes.Buffer)
+		},
+	}
+	
+	// Cached JSON string to avoid re-marshaling for every client
+	cachedJSONMessage string
+	cachedJSONMutex   sync.RWMutex
 )
 
 // SetHistoryInserter sets the callback function for history insertion
@@ -225,8 +237,8 @@ func StreamLotteryData(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
 
-	// Create a client channel
-	clientChan := make(chan string, 10)
+	// Create a client channel with larger buffer for high concurrency (50 instead of 10)
+	clientChan := make(chan string, 50)
 
 	// Register client
 	clientsMutex.Lock()
@@ -234,15 +246,27 @@ func StreamLotteryData(c *gin.Context) {
 	clientCount := len(clients)
 	clientsMutex.Unlock()
 
-	log.Printf("📡 New SSE client connected (Total clients: %d)", clientCount)
+	// Log less frequently at high concurrency (every 100 connections)
+	if clientCount%100 == 0 || clientCount < 100 {
+		log.Printf("📡 New SSE client connected (Total clients: %d)", clientCount)
+	}
 
 	// Send initial data immediately with current client count
-	dataMutex.RLock()
-	currentData.ViewCount = clientCount
-	initialData, _ := json.Marshal(currentData)
-	dataMutex.RUnlock()
+	// Use cached JSON if available, or marshal new data
+	cachedJSONMutex.RLock()
+	initialMessage := cachedJSONMessage
+	cachedJSONMutex.RUnlock()
+	
+	if initialMessage == "" {
+		// No cached data, marshal fresh
+		dataMutex.RLock()
+		currentData.ViewCount = clientCount
+		initialData, _ := json.Marshal(currentData)
+		dataMutex.RUnlock()
+		initialMessage = string(initialData)
+	}
 
-	c.Writer.Write([]byte(fmt.Sprintf("data: %s\n\n", initialData)))
+	c.Writer.Write([]byte(fmt.Sprintf("data: %s\n\n", initialMessage)))
 	c.Writer.Flush()
 
 	// Listen for updates and client disconnect
@@ -254,9 +278,14 @@ func StreamLotteryData(c *gin.Context) {
 			// Client disconnected
 			clientsMutex.Lock()
 			delete(clients, clientChan)
+			remainingClients := len(clients)
 			clientsMutex.Unlock()
 			close(clientChan)
-			log.Printf("📴 SSE client disconnected (Remaining clients: %d)", len(clients))
+			
+			// Log less frequently at high concurrency
+			if remainingClients%100 == 0 || remainingClients < 100 {
+				log.Printf("📴 SSE client disconnected (Remaining clients: %d)", remainingClients)
+			}
 			return
 		case message := <-clientChan:
 			// Send update to client
@@ -267,31 +296,62 @@ func StreamLotteryData(c *gin.Context) {
 }
 
 // broadcastUpdate sends updates to all connected SSE clients
+// OPTIMIZED for 10,000+ concurrent connections
 func broadcastUpdate() {
+	// Step 1: Get client count first (quick lock)
+	clientsMutex.RLock()
+	clientCount := len(clients)
+	clientsMutex.RUnlock()
+	
+	// Step 2: Marshal JSON once using buffer pool (no lock needed)
+	buf := jsonBufferPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	
 	dataMutex.RLock()
-	// Add current client count to the data
-	currentData.ViewCount = len(clients)
-	data, err := json.Marshal(currentData)
+	currentData.ViewCount = clientCount
+	encoder := json.NewEncoder(buf)
+	err := encoder.Encode(currentData)
 	dataMutex.RUnlock()
-
+	
 	if err != nil {
 		log.Printf("❌ Failed to marshal data: %v", err)
+		jsonBufferPool.Put(buf)
 		return
 	}
-
+	
+	// Convert to string and cache it
+	message := buf.String()
+	jsonBufferPool.Put(buf)
+	
+	// Cache the JSON message for new connections
+	cachedJSONMutex.Lock()
+	cachedJSONMessage = message
+	cachedJSONMutex.Unlock()
+	
+	// Step 3: Broadcast to all clients (minimize lock time)
 	clientsMutex.RLock()
-	defer clientsMutex.RUnlock()
-
-	message := string(data)
+	
+	// Count skipped clients
+	skippedCount := 0
+	sentCount := 0
+	
 	for clientChan := range clients {
 		select {
 		case clientChan <- message:
-			// Message sent successfully
+			sentCount++
 		default:
-			// Channel is full, skip this client
-			log.Println("⚠️  Client channel full, skipping...")
+			// Channel is full, skip this client (prevents blocking)
+			skippedCount++
 		}
 	}
-
-	log.Printf("📤 Broadcast to %d clients", len(clients))
+	
+	clientsMutex.RUnlock()
+	
+	// Log only if there are issues or every 10th broadcast
+	if skippedCount > 0 {
+		log.Printf("⚠️  Broadcast: %d sent, %d skipped (full buffers) out of %d clients", 
+			sentCount, skippedCount, clientCount)
+	} else if clientCount%1000 == 0 || clientCount < 1000 {
+		log.Printf("📤 Broadcast to %d clients (all sent)", clientCount)
+	}
 }
