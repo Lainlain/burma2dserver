@@ -24,7 +24,7 @@ func main() {
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
 	log.Printf("🚀 Using %d CPU cores for maximum performance", numCPU)
-	
+
 	// Set umask to 0022 so files are created with correct permissions
 	// This means new files will be 644 and directories 755
 	// Note: umask is Unix-specific, skipped on Windows
@@ -35,8 +35,8 @@ func main() {
 
 	// Create Gin router with custom config for high concurrency
 	gin.SetMode(gin.ReleaseMode) // Reduce logging overhead in production
-	r := gin.New() // Use gin.New() instead of gin.Default() for better control
-	
+	r := gin.New()               // Use gin.New() instead of gin.Default() for better control
+
 	// Add only essential middleware
 	r.Use(gin.Recovery()) // Panic recovery
 	// Skip gin.Logger() middleware in production for better performance
